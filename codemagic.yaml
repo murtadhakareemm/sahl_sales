@@ -33,12 +33,13 @@ workflows:
 
       - name: Build Android APK (Release)
         script: |
-          flutter build apk --release --clean
+          flutter clean
+          flutter build apk --release
 
       - name: Build iOS IPA (Unsigned for Sideloading)
         script: |
           # Use official Flutter command to build an unsigned ipa directly
-          flutter build ipa --release --no-codesign --clean
+          flutter build ipa --release --no-codesign
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
