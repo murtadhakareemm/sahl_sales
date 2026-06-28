@@ -35,18 +35,14 @@ workflows:
         script: |
           flutter build apk --release --clean
 
-      - name: Build iOS App (Unsigned for Sideloading)
+      - name: Build iOS IPA (Unsigned for Sideloading)
         script: |
-          flutter build ios --release --no-codesign --clean
-          # Package the Runner.app into an unsigned .ipa for Sideloadly/AltStore
-          mkdir -p build/ios/ipa/Payload
-          cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload
-          cd build/ios/ipa
-          zip -r sahl_sales_unsigned.ipa Payload
+          # Use official Flutter command to build an unsigned ipa directly
+          flutter build ipa --release --no-codesign --clean
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
-      - build/ios/ipa/sahl_sales_unsigned.ipa
+      - build/ios/ipa/*.ipa
 
     publishing:
       email:
