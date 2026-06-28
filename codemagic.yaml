@@ -3,16 +3,12 @@
 
 workflows:
   sahl-sales-build:
-    name: Sahl Sales Production Build (Android & iOS)
+    name: Sahl Sales Production Build (Android & iOS Unsigned)
     max_build_duration: 60
     instance_type: mac_mini_m1
     environment:
-      groups:
-        # Define environment variables groups in Codemagic UI:
-        # - apple_credentials (contains: APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_PRIVATE_KEY)
-        - apple_credentials
       vars:
-        BUNDLE_ID: "com.sahlsales.app" # Replace with your iOS Bundle Identifier
+        BUNDLE_ID: "com.sahlsales.app"
         XCODE_WORKSPACE: "ios/Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
       flutter: stable
@@ -35,26 +31,22 @@ workflows:
           flutter doctor
           flutter pub get
 
-      - name: Setup Apple Certificates & Profiles (Automatic Code Signing)
-        script: |
-          # Initialize keychain and fetch certificates automatically from Apple Developer portal
-          keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --project-id "$XCODE_SCHEME" --create
-          keychain add-certificates
-          xcode-project use-profiles
-
       - name: Build Android APK (Release)
         script: |
           flutter build apk --release --clean
 
-      - name: Build iOS IPA (Release)
+      - name: Build iOS App (Unsigned for Sideloading)
         script: |
-          # Build and sign the iOS IPA package
-          flutter build ipa --release --export-method ad-hoc --clean
+          flutter build ios --release --no-codesign --clean
+          # Package the Runner.app into an unsigned .ipa for Sideloadly/AltStore
+          mkdir -p build/ios/ipa/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload
+          cd build/ios/ipa
+          zip -r sahl_sales_unsigned.ipa Payload
 
     artifacts:
       - build/app/outputs/flutter-apk/app-release.apk
-      - build/ios/ipa/*.ipa
+      - build/ios/ipa/sahl_sales_unsigned.ipa
 
     publishing:
       email:
